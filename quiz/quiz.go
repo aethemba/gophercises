@@ -34,7 +34,8 @@ func main() {
 	content, err := ioutil.ReadFile(*filename + ".csv")
 
 	if err != nil {
-		log.Fatal(err)
+		fmt.Printf("Failed to open the file %s\n", *filename)
+		os.Exit(1)
 	}
 
 	r := csv.NewReader(strings.NewReader(string(content)))
@@ -66,34 +67,29 @@ func main() {
 		log.Fatal(err)
 	}
 
-	ticker := time.NewTicker(time.Second)
-	defer ticker.Stop()
-	done := make(chan bool)
+	timer := time.NewTimer(time.Duration(*limit) * time.Second)
 
-	go func() {
-		time.Sleep(time.Duration(*limit) * time.Second)
-		done <- true
-	}()
+	for k, v := range data {
+		fmt.Printf("Problem %d: %s:", counter, k)
+		answerCh := make(chan string)
 
-	go func() {
-		for k, v := range data {
-			fmt.Printf("Problem %d: %s:", counter, k)
-			answer, _ := input.ReadString('\n')
-			fmt.Printf("Your answer: %s", answer)
+		go func() {
+			var answer string
+			fmt.Scanf("%s\n", &answer)
+			answerCh <- answer
+		}()
 
+		select {
+		case <-timer.C:
+			fmt.Printf("\nYou scored %d out of %d.\n", correct, len(data))
+			return
+		case answer := <-answerCh:
 			counter++
 			if strings.Compare(strings.Trim(answer, "\n "), v) == 0 {
 				correct++
 			}
 		}
-	}()
-
-	for {
-		if <-done {
-			break
-		}
 	}
-	fmt.Println("\nTime up!")
-	fmt.Printf("You answered %d questions out of %d correctly!\n", correct, len(data))
+	fmt.Printf("\nYou scored %d out of %d.\n", correct, len(data))
 
 }
