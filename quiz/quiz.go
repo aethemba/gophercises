@@ -22,21 +22,22 @@ type Answer struct {
 }
 
 func main() {
-	fmt.Println("Welcome to the quiz!")
 
-	var filename = flag.String("csv", "problems", "a csv file in the format of 'question,answer'")
+	var filename = flag.String("csv", "problems.csv", "a csv file in the format of 'question,answer'")
 	var limit = flag.Int("limit", 30, "time limit (seconds) for the quiz")
 
 	flag.Parse()
-	fmt.Printf("Loading quiz from file: %s.csv\n", *filename)
-	fmt.Println("Time limit: ", *limit)
 
-	content, err := ioutil.ReadFile(*filename + ".csv")
+	content, err := ioutil.ReadFile(*filename)
 
 	if err != nil {
 		fmt.Printf("Failed to open the file %s\n", *filename)
 		os.Exit(1)
 	}
+
+	fmt.Println("Welcome to the quiz!")
+	fmt.Printf("Loading quiz from file: %s.csv\n", *filename)
+	fmt.Println("Time limit: ", *limit)
 
 	r := csv.NewReader(strings.NewReader(string(content)))
 
