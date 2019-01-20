@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"html/template"
 	"io/ioutil"
@@ -52,7 +53,11 @@ func LoadJSONStory(data []byte) Story {
 
 func main() {
 
-	data := LoadFile("story.json")
+	var storyFilename = flag.String("filename", "story.json", "path to json file with the story")
+
+	flag.Parse()
+
+	data := LoadFile(*storyFilename)
 	s = LoadJSONStory(data)
 
 	http.HandleFunc("/", welcomeHandler)
