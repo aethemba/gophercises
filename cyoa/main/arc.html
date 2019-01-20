@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>{{.Title}}</title>
+	</head>
+	<body>
+        <div class="story">{{.Story}}</div>
+        <div class="options">
+            {{range .Options}}<p>{{.Text}}<span> <a href="/arc/{{.Arc}}">Select</a> </span></p>{{else}}<p><a href="/arc/intro">Start again</a></p>{{end}}
+        </div>
+	</body>
+</html>
