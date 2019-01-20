@@ -12,6 +12,8 @@ import (
 	"strings"
 )
 
+var tpl = template.Must(template.ParseFiles("arc.html"))
+
 type Story map[string]Arc
 
 type Option struct {
@@ -63,47 +65,74 @@ func main() {
 	// http.HandleFunc("/", welcomeHandler)
 	// http.HandleFunc("/arc/", arcHandler)
 
-	h := NewHandler(s)
+	pathFn := func(r *http.Request) string {
+		path := r.URL.Path
+		if path == "/story" || path == "/story/" {
+			return "/story/intro"
+		}
 
-	log.Fatal(http.ListenAndServe(":8081", h))
+		return path[len("/story/"):]
+	}
+
+	h := NewHandler(s, WithPathFn(pathFn))
+	//h := NewHandler(s, WithTemplate(nil))
+
+	log.Fatal(http.ListenAndServe(":8081 ", h))
 }
 
-func NewHandler(s Story) http.Handler {
-	return handler{s}
+func NewHandler(s Story, opt ...HandlerOption) http.Handler {
+	h := handler{s, tpl, defaultPathFn}
+
+	for _, opt := range opt {
+		opt(&h)
+	}
+
+	return h
 }
 
 type handler struct {
-	s Story
+	s        Story
+	t        *template.Template
+	pathFunc func(r *http.Request) string
 }
 
-func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	//t := template.Must(template.New("arc").Parse("arc.html"))
-	t := template.Must(template.ParseFiles("arc.html"))
+type HandlerOption func(h *handler)
 
+func defaultPathFn(r *http.Request) string {
 	path := r.URL.Path
 	fmt.Println(path)
 	if path == "" || path == "/" {
-		fmt.Println("found")
-		t = template.Must(template.ParseFiles("welcome.html"))
-		t.Execute(w, struct{ Title string }{Title: "Welcome"})
-		return
+		return "intro"
 	}
 
-	key := strings.SplitAfter(path, "/arc/")
+	return path[1:]
+}
 
-	if len(key) < 2 {
-		return
+func WithTemplate(t *template.Template) HandlerOption {
+	return func(h *handler) {
+		h.t = t
 	}
+}
 
-	if v, ok := s[key[1]]; ok {
-		err := t.Execute(w, v)
+func WithPathFn(fn func(r *http.Request) string) HandlerOption {
+	return func(h *handler) {
+		h.pathFunc = fn
+	}
+}
+
+func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+
+	path := h.pathFunc(r)
+	fmt.Println(path)
+	if v, ok := s[path]; ok {
+		err := h.t.Execute(w, v)
 		if err != nil {
 			log.Printf("%v", err)
 			http.Error(w, "Something went wrong", http.StatusInternalServerError)
+			return
 		}
 	} else {
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(w, "Story not found")
+		http.Error(w, "Page not found", http.StatusNotFound)
 	}
 
 }
