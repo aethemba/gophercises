@@ -39,7 +39,7 @@ func LoadFile(filename string) []byte {
 	return data
 }
 
-func LoadJSONStory(data []byte) Story {
+func ParseJSONStory(data []byte) Story {
 
 	var result Story
 	err := json.Unmarshal(data, &result)
@@ -53,16 +53,59 @@ func LoadJSONStory(data []byte) Story {
 
 func main() {
 
-	var storyFilename = flag.String("filename", "story.json", "path to json file with the story")
+	var storyFilename = flag.String("file", "story.json", "the JSON file with the cyoa story")
 
 	flag.Parse()
 
 	data := LoadFile(*storyFilename)
-	s = LoadJSONStory(data)
+	s = ParseJSONStory(data)
 
-	http.HandleFunc("/", welcomeHandler)
-	http.HandleFunc("/arc/", arcHandler)
-	log.Fatal(http.ListenAndServe(":8081", nil))
+	// http.HandleFunc("/", welcomeHandler)
+	// http.HandleFunc("/arc/", arcHandler)
+
+	h := NewHandler(s)
+
+	log.Fatal(http.ListenAndServe(":8081", h))
+}
+
+func NewHandler(s Story) http.Handler {
+	return handler{s}
+}
+
+type handler struct {
+	s Story
+}
+
+func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	//t := template.Must(template.New("arc").Parse("arc.html"))
+	t := template.Must(template.ParseFiles("arc.html"))
+
+	path := r.URL.Path
+	fmt.Println(path)
+	if path == "" || path == "/" {
+		fmt.Println("found")
+		t = template.Must(template.ParseFiles("welcome.html"))
+		t.Execute(w, struct{ Title string }{Title: "Welcome"})
+		return
+	}
+
+	key := strings.SplitAfter(path, "/arc/")
+
+	if len(key) < 2 {
+		return
+	}
+
+	if v, ok := s[key[1]]; ok {
+		err := t.Execute(w, v)
+		if err != nil {
+			log.Printf("%v", err)
+			http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		}
+	} else {
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprintf(w, "Story not found")
+	}
+
 }
 
 func arcHandler(w http.ResponseWriter, r *http.Request) {
@@ -72,24 +115,16 @@ func arcHandler(w http.ResponseWriter, r *http.Request) {
 
 	key := strings.SplitAfter(path, "/arc/")
 
-	data := struct {
-		Title   string
-		Story   string
-		Options []Option
-	}{
-		Title: "Arc page",
-	}
-
 	if v, ok := s[key[1]]; ok {
-		data.Story = v.Story[0]
-		data.Options = v.Options
+		err := t.Execute(w, v)
+		if err != nil {
+			panic(err)
+		}
 	} else {
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprintf(w, "Story not found")
-		return
 	}
 
-	t.Execute(w, data)
 }
 
 func welcomeHandler(w http.ResponseWriter, r *http.Request) {
