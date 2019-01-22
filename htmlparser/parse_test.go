@@ -3,11 +3,9 @@ package htmlparser
 import (
 	"strings"
 	"testing"
-
-	"golang.org/x/net/html"
 )
 
-func TestFindLinks(t *testing.T) {
+func TestParse(t *testing.T) {
 
 	var tpl = `<html>
 <body>
@@ -29,8 +27,10 @@ func TestFindLinks(t *testing.T) {
 	}
 
 	for _, table := range tables {
-		doc, _ := html.Parse(strings.NewReader(table.t))
-		links := FindLinks(doc)
+		r := strings.NewReader(table.t)
+
+		links, _ := Parse(r)
+
 		if len(links) != table.c {
 			t.Errorf("Expected %d, got %d", table.c, len(links))
 		}

@@ -3,6 +3,7 @@ package htmlparser
 import (
 	"fmt"
 	"io"
+	"strings"
 
 	"golang.org/x/net/html"
 )
@@ -23,10 +24,26 @@ func ParseLink(n *html.Node) bool {
 	return false
 }
 
+func text(n *html.Node) string {
+	if n.Type == html.TextNode {
+		return n.Data
+	}
+
+	if n.Type != html.ElementNode {
+		return ""
+	}
+
+	var ret string
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		ret += text(c) + " "
+	}
+	return strings.Join(strings.Fields(ret), " ")
+}
+
 func BuildLink(n *html.Node) (Link, error) {
 	for _, a := range n.Attr {
 		if a.Key == "href" {
-			return Link{a.Val, n.FirstChild.Data}, nil
+			return Link{a.Val, text(n)}, nil
 		}
 	}
 	return Link{}, fmt.Errorf("Node is not a link")
@@ -61,6 +78,5 @@ func Parse(r io.Reader) ([]Link, error) {
 	}
 
 	links := FindLinks(doc)
-
 	return links, nil
 }
