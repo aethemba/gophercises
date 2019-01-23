@@ -17,6 +17,8 @@ package cmd
 import (
 	"fmt"
 
+	"gophercises/task/tasks"
+
 	"github.com/spf13/cobra"
 )
 
@@ -27,6 +29,8 @@ var addCmd = &cobra.Command{
 	Long:  "adds a new task to our list",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("add called")
+		t := tasks.Task{Desc: "Test tasl"}
+		fmt.Printf("%#v\n", t)
 	},
 }
 
