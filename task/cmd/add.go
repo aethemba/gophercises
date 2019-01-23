@@ -16,8 +16,9 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 
-	"gophercises/task/tasks"
+	"github.com/boltdb/bolt"
 
 	"github.com/spf13/cobra"
 )
@@ -28,9 +29,43 @@ var addCmd = &cobra.Command{
 	Short: "adds a new task to our list",
 	Long:  "adds a new task to our list",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("add called")
-		t := tasks.Task{Desc: "Test tasl"}
-		fmt.Printf("%#v\n", t)
+		if len(args) == 0 {
+			fmt.Println("Please provide task data as arguments")
+			return
+		}
+
+		db, err := bolt.Open("tasks.db", 0600, nil)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		var world = []byte("world")
+		err = db.Update(func(tx *bolt.Tx) error {
+			bucket := tx.Bucket(world)
+			if bucket == nil {
+				return fmt.Errorf("Bucket %q was not found", world)
+			}
+
+			id, err := bucket.NextSequence()
+			if err != nil {
+				return err
+			}
+			fmt.Printf("New id %d\n", id)
+			return nil
+		})
+
+		if err != nil {
+			fmt.Printf("%s\n", err)
+		}
+
+		defer db.Close()
+
+		// Get number of tasks in DB
+
+		// err = db.Update(func(tx *bolt.Tx) error {
+
+		// })
 	},
 }
 

@@ -16,7 +16,9 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 
+	"github.com/boltdb/bolt"
 	"github.com/spf13/cobra"
 )
 
@@ -26,7 +28,76 @@ var listCmd = &cobra.Command{
 	Short: "lists all of our incomplete tasks",
 	Long:  "lists all of our incomplete tasks",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("list called")
+		db, err := bolt.Open("tasks.db", 0600, nil)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		defer db.Close()
+
+		key := []byte("hello")
+		// value := []byte("Hello world")
+
+		var world = []byte("world")
+		err = db.Update(func(tx *bolt.Tx) error {
+			_, err := tx.CreateBucketIfNotExists(world)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+		// 	err = bucket.Put(key, value)
+		// 	if err != nil {
+		// 		return err
+		// 	}
+
+		// 	return nil
+		// })
+
+		// if err != nil {
+		// 	log.Fatal(err)
+		// }
+
+		err = db.View(func(tx *bolt.Tx) error {
+			bucket := tx.Bucket(world)
+			if bucket == nil {
+				return fmt.Errorf("Bucket %q was not found", world)
+			}
+
+			val := bucket.Get(key)
+			fmt.Println(string(val))
+			return nil
+		})
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = db.View(func(tx *bolt.Tx) error {
+			bucket := tx.Bucket(world)
+			if bucket == nil {
+				return fmt.Errorf("Bucket %q was not found", world)
+			}
+
+			c := bucket.Cursor()
+			fmt.Println("Keys in World bucket:")
+
+			items := 0
+			for k, v := c.First(); k != nil; k, v = c.Next() {
+				fmt.Printf("key=%s, value=%s\n", k, v)
+				items++
+			}
+
+			fmt.Printf("%d item(s) in database\n", items)
+
+			return nil
+		})
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
 	},
 }
 
