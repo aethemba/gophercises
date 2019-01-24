@@ -17,6 +17,7 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/boltdb/bolt"
 
@@ -47,11 +48,22 @@ var addCmd = &cobra.Command{
 				return fmt.Errorf("Bucket %q was not found", world)
 			}
 
-			id, err := bucket.NextSequence()
+			// id, err := bucket.NextSequence()
 			if err != nil {
 				return err
 			}
-			fmt.Printf("New id %d\n", id)
+
+			value := strings.Join(args, " ")
+
+			err = bucket.Put([]byte(value), []byte("open"))
+			if err != nil {
+				return err
+			}
+
+			if err != nil {
+				return err
+			}
+			fmt.Printf("Added \"%s\" to your task list\n", value)
 			return nil
 		})
 
@@ -61,11 +73,6 @@ var addCmd = &cobra.Command{
 
 		defer db.Close()
 
-		// Get number of tasks in DB
-
-		// err = db.Update(func(tx *bolt.Tx) error {
-
-		// })
 	},
 }
 

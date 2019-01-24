@@ -36,9 +36,6 @@ var listCmd = &cobra.Command{
 
 		defer db.Close()
 
-		key := []byte("hello")
-		// value := []byte("Hello world")
-
 		var world = []byte("world")
 		err = db.Update(func(tx *bolt.Tx) error {
 			_, err := tx.CreateBucketIfNotExists(world)
@@ -47,32 +44,6 @@ var listCmd = &cobra.Command{
 			}
 			return nil
 		})
-		// 	err = bucket.Put(key, value)
-		// 	if err != nil {
-		// 		return err
-		// 	}
-
-		// 	return nil
-		// })
-
-		// if err != nil {
-		// 	log.Fatal(err)
-		// }
-
-		err = db.View(func(tx *bolt.Tx) error {
-			bucket := tx.Bucket(world)
-			if bucket == nil {
-				return fmt.Errorf("Bucket %q was not found", world)
-			}
-
-			val := bucket.Get(key)
-			fmt.Println(string(val))
-			return nil
-		})
-
-		if err != nil {
-			log.Fatal(err)
-		}
 
 		err = db.View(func(tx *bolt.Tx) error {
 			bucket := tx.Bucket(world)
@@ -81,15 +52,17 @@ var listCmd = &cobra.Command{
 			}
 
 			c := bucket.Cursor()
-			fmt.Println("Keys in World bucket:")
 
-			items := 0
-			for k, v := c.First(); k != nil; k, v = c.Next() {
-				fmt.Printf("key=%s, value=%s\n", k, v)
-				items++
+			counter := 1
+			fmt.Println("You have the following tasks:")
+			for k, _ := c.First(); k != nil; k, _ = c.Next() {
+				fmt.Printf("%d. %s\n", counter, k)
+				counter++
 			}
 
-			fmt.Printf("%d item(s) in database\n", items)
+			if counter == 1 {
+				fmt.Println("All done!")
+			}
 
 			return nil
 		})

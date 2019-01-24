@@ -16,7 +16,10 @@ package cmd
 
 import (
 	"fmt"
+	"log"
+	"strconv"
 
+	"github.com/boltdb/bolt"
 	"github.com/spf13/cobra"
 )
 
@@ -24,9 +27,56 @@ import (
 var doCmd = &cobra.Command{
 	Use:   "do",
 	Short: "marks a task as complete",
-	Long:  "marks a task as complete",
+	Long:  "marks a task as complete and removes it from the list",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("do called")
+
+		if len(args) == 0 {
+			fmt.Println("Please provide a task number")
+			return
+		}
+
+		key, _ := strconv.Atoi(args[0])
+
+		db, err := bolt.Open("tasks.db", 0600, nil)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		var world = []byte("world")
+
+		err = db.Update(func(tx *bolt.Tx) error {
+			bucket := tx.Bucket(world)
+			if bucket == nil {
+				return fmt.Errorf("Bucket %q was not found", world)
+			}
+
+			c := bucket.Cursor()
+
+			counter := 1
+			var delKey []byte
+			for k, _ := c.First(); k != nil; k, _ = c.Next() {
+				if counter == int(key) {
+					delKey = k
+				}
+				break
+			}
+
+			err := bucket.Delete(delKey)
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("You have completed the task \"%s\".\n", delKey)
+			return nil
+		})
+
+		if err != nil {
+			fmt.Printf("%s\n", err)
+		}
+
+		defer db.Close()
+
 	},
 }
 
