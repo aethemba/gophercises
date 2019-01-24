@@ -16,10 +16,10 @@ package cmd
 
 import (
 	"fmt"
-	"log"
+	tsk "gophercises/task/tasks"
+	"os"
 	"strconv"
 
-	"github.com/boltdb/bolt"
 	"github.com/spf13/cobra"
 )
 
@@ -30,55 +30,93 @@ var doCmd = &cobra.Command{
 	Long:  "marks a task as complete and removes it from the list",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		if len(args) == 0 {
-			fmt.Println("Please provide a task number")
-			return
-		}
+		var ids []int
+		for _, arg := range args {
+			id, err := strconv.Atoi(arg)
 
-		key, _ := strconv.Atoi(args[0])
-
-		db, err := bolt.Open("tasks.db", 0600, nil)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		var world = []byte("world")
-
-		err = db.Update(func(tx *bolt.Tx) error {
-			bucket := tx.Bucket(world)
-			if bucket == nil {
-				return fmt.Errorf("Bucket %q was not found", world)
-			}
-
-			c := bucket.Cursor()
-
-			counter := 1
-			var delKey []byte
-			for k, v := c.First(); k != nil; k, v = c.Next() {
-				if counter == key && string(v) == "open" {
-					delKey = k
-					break
-				}
-				if string(v) == "open" {
-					counter++
-				}
-
-			}
-			err := bucket.Put(delKey, []byte("completed"))
 			if err != nil {
-				return err
+				fmt.Println("Failed to parse argument: ", arg)
+				os.Exit(1)
 			}
 
-			fmt.Printf("You have completed the task \"%s\".\n", delKey)
-			return nil
-		})
-
-		if err != nil {
-			fmt.Printf("%s\n", err)
+			ids = append(ids, id)
 		}
 
-		defer db.Close()
+		tasks, err := tsk.ListTasks()
+
+		if err != nil {
+			fmt.Println("Something went wrong: ", err)
+			os.Exit(1)
+		}
+
+		for _, id := range ids {
+			if id < 0 || id > len(tasks) {
+				fmt.Println("Invalid task number: ", id)
+				continue
+			}
+
+			for i, t := range tasks {
+				if i+1 == id {
+					err := tsk.DeleteTask(t.Key)
+					if err != nil {
+						fmt.Printf("Failed to set task \"%d\" as completed. Err: %s\n", id, err)
+					} else {
+						fmt.Printf("Marked \"%d\" as completed\n", id)
+					}
+				}
+			}
+
+		}
+
+		// if len(args) == 0 {
+		// 	fmt.Println("Please provide a task number")
+		// 	return
+		// }
+
+		// key, _ := strconv.Atoi(args[0])
+
+		// db, err := bolt.Open("tasks.db", 0600, nil)
+
+		// if err != nil {
+		// 	log.Fatal(err)
+		// }
+
+		// var world = []byte("world")
+
+		// err = db.Update(func(tx *bolt.Tx) error {
+		// 	bucket := tx.Bucket(world)
+		// 	if bucket == nil {
+		// 		return fmt.Errorf("Bucket %q was not found", world)
+		// 	}
+
+		// 	c := bucket.Cursor()
+
+		// 	counter := 1
+		// 	var delKey []byte
+		// 	for k, v := c.First(); k != nil; k, v = c.Next() {
+		// 		if counter == key && string(v) == "open" {
+		// 			delKey = k
+		// 			break
+		// 		}
+		// 		if string(v) == "open" {
+		// 			counter++
+		// 		}
+
+		// 	}
+		// 	err := bucket.Put(delKey, []byte("completed"))
+		// 	if err != nil {
+		// 		return err
+		// 	}
+
+		// 	fmt.Printf("You have completed the task \"%s\".\n", delKey)
+		// 	return nil
+		// })
+
+		// if err != nil {
+		// 	fmt.Printf("%s\n", err)
+		// }
+
+		// defer db.Close()
 
 	},
 }

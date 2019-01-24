@@ -16,9 +16,10 @@ package cmd
 
 import (
 	"fmt"
-	"log"
+	"os"
 
-	"github.com/boltdb/bolt"
+	"gophercises/task/tasks"
+
 	"github.com/spf13/cobra"
 )
 
@@ -28,51 +29,68 @@ var listCmd = &cobra.Command{
 	Short: "lists all of our incomplete tasks",
 	Long:  "lists all of our incomplete tasks",
 	Run: func(cmd *cobra.Command, args []string) {
-		db, err := bolt.Open("tasks.db", 0600, nil)
+
+		tasks, err := tasks.ListTasks()
 
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println("Something went wrong: ", err.Error())
+			os.Exit(1)
 		}
 
-		defer db.Close()
-
-		var world = []byte("world")
-		err = db.Update(func(tx *bolt.Tx) error {
-			_, err := tx.CreateBucketIfNotExists(world)
-			if err != nil {
-				return err
-			}
-			return nil
-		})
-
-		err = db.View(func(tx *bolt.Tx) error {
-			bucket := tx.Bucket(world)
-			if bucket == nil {
-				return fmt.Errorf("Bucket %q was not found", world)
-			}
-
-			c := bucket.Cursor()
-
-			counter := 1
-			fmt.Println("You have the following tasks:")
-			for k, v := c.First(); k != nil; k, v = c.Next() {
-				// fmt.Println(string(k), string(v))
-				if string(v) == "open" {
-					fmt.Printf("%d. %s\n", counter, k)
-					counter++
-				}
-			}
-
-			if counter == 1 {
-				fmt.Println("\n")
-			}
-
-			return nil
-		})
-
-		if err != nil {
-			log.Fatal(err)
+		if len(tasks) == 0 {
+			fmt.Println("No tasks")
+			return
 		}
+
+		fmt.Println("You have the following tasks")
+		for i, task := range tasks {
+			fmt.Printf("%d. %s\n", i+1, task.Value)
+		}
+		// db, err := bolt.Open("tasks.db", 0600, nil)
+
+		// if err != nil {
+		// 	log.Fatal(err)
+		// }
+
+		// defer db.Close()
+
+		// var world = []byte("world")
+		// err = db.Update(func(tx *bolt.Tx) error {
+		// 	_, err := tx.CreateBucketIfNotExists(world)
+		// 	if err != nil {
+		// 		return err
+		// 	}
+		// 	return nil
+		// })
+
+		// err = db.View(func(tx *bolt.Tx) error {
+		// 	bucket := tx.Bucket(world)
+		// 	if bucket == nil {
+		// 		return fmt.Errorf("Bucket %q was not found", world)
+		// 	}
+
+		// 	c := bucket.Cursor()
+
+		// 	counter := 1
+		// 	fmt.Println("You have the following tasks:")
+		// 	for k, v := c.First(); k != nil; k, v = c.Next() {
+		// 		// fmt.Println(string(k), string(v))
+		// 		if string(v) == "open" {
+		// 			fmt.Printf("%d. %s\n", counter, k)
+		// 			counter++
+		// 		}
+		// 	}
+
+		// 	if counter == 1 {
+		// 		fmt.Println("\n")
+		// 	}
+
+		// 	return nil
+		// })
+
+		// if err != nil {
+		// 	log.Fatal(err)
+		// }
 
 	},
 }
