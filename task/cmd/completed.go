@@ -63,7 +63,7 @@ var completeCmd = &cobra.Command{
 			}
 
 			if counter == 1 {
-				fmt.Println("Nothing completed...get to work!")
+				fmt.Println("\nNothing completed...get to work!")
 			}
 
 			return nil

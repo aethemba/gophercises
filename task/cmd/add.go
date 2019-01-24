@@ -49,7 +49,6 @@ var addCmd = &cobra.Command{
 			}
 
 			value := strings.Join(args, " ")
-			fmt.Println(value)
 			err = bucket.Put([]byte(value), []byte("open"))
 			if err != nil {
 				return err
