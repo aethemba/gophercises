@@ -55,13 +55,16 @@ var listCmd = &cobra.Command{
 
 			counter := 1
 			fmt.Println("You have the following tasks:")
-			for k, _ := c.First(); k != nil; k, _ = c.Next() {
-				fmt.Printf("%d. %s\n", counter, k)
-				counter++
+			for k, v := c.First(); k != nil; k, v = c.Next() {
+				// fmt.Println(string(k), string(v))
+				if string(v) == "open" {
+					fmt.Printf("%d. %s\n", counter, k)
+					counter++
+				}
 			}
 
 			if counter == 1 {
-				fmt.Println("All done!")
+				fmt.Println("\n")
 			}
 
 			return nil

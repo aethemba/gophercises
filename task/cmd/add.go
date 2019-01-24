@@ -48,21 +48,13 @@ var addCmd = &cobra.Command{
 				return fmt.Errorf("Bucket %q was not found", world)
 			}
 
-			// id, err := bucket.NextSequence()
-			if err != nil {
-				return err
-			}
-
 			value := strings.Join(args, " ")
-
+			fmt.Println(value)
 			err = bucket.Put([]byte(value), []byte("open"))
 			if err != nil {
 				return err
 			}
 
-			if err != nil {
-				return err
-			}
 			fmt.Printf("Added \"%s\" to your task list\n", value)
 			return nil
 		})

@@ -17,35 +17,35 @@ package cmd
 import (
 	"fmt"
 	"log"
-	"strconv"
 
 	"github.com/boltdb/bolt"
 	"github.com/spf13/cobra"
 )
 
-// doCmd represents the do command
-var doCmd = &cobra.Command{
-	Use:   "do",
-	Short: "marks a task as complete",
-	Long:  "marks a task as complete and removes it from the list",
+// listCmd represents the list command
+var completeCmd = &cobra.Command{
+	Use:   "completed",
+	Short: "lists your completed tasks",
+	Long:  "lists your completed tasks",
 	Run: func(cmd *cobra.Command, args []string) {
-
-		if len(args) == 0 {
-			fmt.Println("Please provide a task number")
-			return
-		}
-
-		key, _ := strconv.Atoi(args[0])
-
 		db, err := bolt.Open("tasks.db", 0600, nil)
 
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		var world = []byte("world")
+		defer db.Close()
 
+		var world = []byte("world")
 		err = db.Update(func(tx *bolt.Tx) error {
+			_, err := tx.CreateBucketIfNotExists(world)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+
+		err = db.View(func(tx *bolt.Tx) error {
 			bucket := tx.Bucket(world)
 			if bucket == nil {
 				return fmt.Errorf("Bucket %q was not found", world)
@@ -54,45 +54,38 @@ var doCmd = &cobra.Command{
 			c := bucket.Cursor()
 
 			counter := 1
-			var delKey []byte
+			fmt.Println("You completed the following tasks:")
 			for k, v := c.First(); k != nil; k, v = c.Next() {
-				if counter == key && string(v) == "open" {
-					delKey = k
-					break
-				}
-				if string(v) == "open" {
+				if string(v) == "completed" {
+					fmt.Printf("%d. %s\n", counter, k)
 					counter++
 				}
-
-			}
-			err := bucket.Put(delKey, []byte("completed"))
-			if err != nil {
-				return err
 			}
 
-			fmt.Printf("You have completed the task \"%s\".\n", delKey)
+			if counter == 1 {
+				fmt.Println("Nothing completed...get to work!")
+			}
+
 			return nil
 		})
 
 		if err != nil {
-			fmt.Printf("%s\n", err)
+			log.Fatal(err)
 		}
-
-		defer db.Close()
 
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(doCmd)
+	rootCmd.AddCommand(completeCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// doCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// listCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// doCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// listCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
