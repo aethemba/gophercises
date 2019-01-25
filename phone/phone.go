@@ -7,6 +7,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
@@ -18,6 +20,12 @@ type Number struct {
 	Id   int            `db:"id"`
 	Raw  string         `db:"raw"`
 	Norm sql.NullString `db:"norm"`
+}
+
+type Number2 struct {
+	gorm.Model
+	Raw  string
+	Norm string
 }
 
 var ctx = context.Background()
@@ -139,4 +147,26 @@ func AllNumbersX() []Number {
 		fmt.Println("err", err)
 	}
 	return numbers
+}
+
+func RunG() {
+	db, err := gorm.Open("postgres", "user=aethemba dbname=phone sslmode=disable")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	db.AutoMigrate(&Number2{})
+
+	db.Create(&Number2{Raw: "987615217"})
+
+	var nr Number2
+
+	db.First(&nr, "raw = ?", "987615217")
+	fmt.Printf("%#v\n\n", nr)
+
+	db.Model(&nr).Update("Norm", "123456789")
+
+	fmt.Printf("%#v\n", nr)
+
 }

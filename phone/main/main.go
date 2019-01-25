@@ -1,20 +1,18 @@
 package main
 
 import (
-	"bufio"
-	"fmt"
 	"gophercises/phone"
-	"os"
 )
 
 func main() {
-	var numbers []string
+	phone.RunG()
+	// var numbers []string
 
-	scanner := bufio.NewScanner(os.Stdin)
-	scanner.Split(bufio.ScanLines)
-	for scanner.Scan() {
-		numbers = append(numbers, scanner.Text())
-	}
+	// scanner := bufio.NewScanner(os.Stdin)
+	// scanner.Split(bufio.ScanLines)
+	// for scanner.Scan() {
+	// 	numbers = append(numbers, scanner.Text())
+	// }
 
 	// phone.Delete()
 
@@ -22,13 +20,13 @@ func main() {
 	// 	phone.InsertX(n)
 	// }
 
-	phone.AllNumbersX()
+	// phone.AllNumbersX()
 
-	numbers = phone.AllNumbers()
-	fmt.Println("Numbers in DB")
-	for _, n := range numbers {
-		fmt.Println(n)
-	}
+	// numbers = phone.AllNumbers()
+	// fmt.Println("Numbers in DB")
+	// for _, n := range numbers {
+	// 	fmt.Println(n)
+	// }
 
 	// fmt.Println("Numbers normalized")
 	// for _, n := range numbers {
