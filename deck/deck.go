@@ -25,8 +25,14 @@ const (
 	King
 )
 
+const (
+	MinValue = Ace
+	MaxValue = King
+)
+
 var Suits = []Suit{Diamonds, Hearts, Clubs, Spades}
-var Values = []Value{Ace, Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack, Queen, King}
+
+// var Values = []Value{Ace, Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack, Queen, King}
 
 func Shuffle(d []Card) []Card {
 
@@ -75,7 +81,7 @@ func New(options ...func(*[]Card)) []Card {
 	cards := make([]Card, 0)
 
 	for _, suit := range Suits {
-		for _, val := range Values {
+		for val := MinValue; val <= MaxValue; val++ {
 			cards = append(cards, Card{Suit: suit, Value: val})
 		}
 	}
