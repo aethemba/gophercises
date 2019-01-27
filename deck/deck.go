@@ -1,6 +1,9 @@
 package deck
 
-import "fmt"
+import (
+	"fmt"
+	"math/rand"
+)
 
 type Value int
 type Suit int
@@ -25,8 +28,47 @@ const (
 var Suits = []Suit{Diamonds, Hearts, Clubs, Spades}
 var Values = []Value{Ace, One, Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack, Queen, King}
 
-func Shuffle(*[]Card) {
-	fmt.Println("Making some random permutation on the cards")
+func Shuffle(d []Card) []Card {
+
+	shuffled := make([]Card, len(d))
+
+	for i, value := range rand.Perm(len(d)) {
+		shuffled[value] = d[i]
+	}
+
+	return shuffled
+
+}
+
+type ByNew []Card
+
+func (n ByNew) Len() int {
+	return len(n)
+}
+
+func (n ByNew) Swap(i, j int) {
+	n[i], n[j] = n[j], n[i]
+}
+
+func (n ByNew) Less(i, j int) bool {
+
+	// If i and j have the same value (e.g. both King),
+	// than we look at the suit
+	if n[i].Value == n[j].Value {
+		return n[i].Suit < n[j].Suit
+	}
+
+	// I is less than J if it has a lower Value than J
+	return n[i].Value < n[j].Value
+}
+
+func ShuffleInPlace(d []Card) {
+
+	//For every card in the deck, swap with a random other card
+	for i, _ := range d {
+		otherCard := rand.Intn(len(d))
+		d[otherCard], d[i] = d[i], d[otherCard]
+	}
 }
 
 func New(options ...func(*[]Card)) []Card {
@@ -42,10 +84,10 @@ func New(options ...func(*[]Card)) []Card {
 }
 
 const (
-	Diamonds Suit = iota
-	Hearts
+	Spades Suit = iota
 	Clubs
-	Spades
+	Hearts
+	Diamonds
 )
 
 type Card struct {
@@ -86,7 +128,7 @@ func (c Card) String() string {
 		val = "King"
 
 	default:
-		val = "Unknown card value"
+		val = "Unknown value"
 	}
 
 	switch c.Suit {

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"gophercises/deck"
+	"sort"
 )
 
 func main() {
@@ -11,8 +12,11 @@ func main() {
 
 	cards := deck.New()
 
-	fmt.Println("Cards in deck")
-	for _, c := range cards {
-		fmt.Println(c)
+	deck.ShuffleInPlace(cards)
+
+	sort.Sort(deck.ByNew(cards))
+
+	for k, v := range cards {
+		fmt.Println(k, v)
 	}
 }
