@@ -21,9 +21,8 @@ func main() {
 
 	fmt.Println("***")
 
-	newCards := deck.New(deck.DefaultSort)
+	newCards := deck.New(deck.DefaultSort, deck.Jokers(3))
 	for k, v := range newCards {
 		fmt.Println(k, v)
 	}
-
 }

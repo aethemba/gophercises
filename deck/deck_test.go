@@ -24,5 +24,16 @@ func TestNew(t *testing.T) {
 	if len(cards) != 13*4 {
 		t.Error("Invalid number of cards")
 	}
+}
+
+func TestJokers(t *testing.T) {
+	jokerCount := 3
+	cards := New(DefaultSort, Jokers(jokerCount))
+
+	for i := 1; i <= jokerCount; i++ {
+		if cards[len(cards)-i].Suit != Joker {
+			t.Error("Expected a Joker, received ", cards[len(cards)])
+		}
+	}
 
 }

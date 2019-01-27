@@ -77,6 +77,15 @@ func DefaultSort(cards []Card) []Card {
 	return cards
 }
 
+func Jokers(j int) func([]Card) []Card {
+	return func(cards []Card) []Card {
+		for i := 1; i <= j; i++ {
+			cards = append(cards, Card{Value: 0, Suit: Joker})
+		}
+		return cards
+	}
+}
+
 func CustomSort(less func(cards []Card) func(i, j int) bool) func([]Card) []Card {
 	return func(cards []Card) []Card {
 		sort.Slice(cards, less(cards))
@@ -121,6 +130,7 @@ const (
 	Clubs
 	Hearts
 	Diamonds
+	Joker
 )
 
 type Card struct {
@@ -131,6 +141,8 @@ type Card struct {
 func (c Card) String() string {
 	var val, suit string
 	switch c.Value {
+	case 0:
+		val = "Th"
 	case 1:
 		val = "Ace"
 	case 2:
@@ -171,8 +183,14 @@ func (c Card) String() string {
 		suit = "Hearts"
 	case 3:
 		suit = "Diamonds"
+	case 4:
+		suit = "Joker"
 	default:
 		suit = "Unknown Suit"
+	}
+
+	if c.Suit == Joker {
+		return fmt.Sprintf("A Joker")
 	}
 
 	return fmt.Sprintf("%s of %s", val, suit)
