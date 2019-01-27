@@ -86,6 +86,33 @@ func Jokers(j int) func([]Card) []Card {
 	}
 }
 
+func Filter(unwanted []Card) func([]Card) []Card {
+	return func(cards []Card) []Card {
+		for _, unwantedCard := range unwanted {
+			for i, j := range cards {
+				if j.Suit == unwantedCard.Suit && j.Value == unwantedCard.Value {
+					cards = append(cards[:i], cards[i+1:]...)
+				}
+			}
+		}
+		return cards
+	}
+}
+
+// Alternative func
+func FilterFunc(f func(Card) bool) func([]Card) []Card {
+	// f returns true if the card should be filtered
+	return func(cards []Card) []Card {
+		var result []Card
+		for _, card := range cards {
+			if !f(card) {
+				result = append(result, card)
+			}
+		}
+		return result
+	}
+}
+
 func CustomSort(less func(cards []Card) func(i, j int) bool) func([]Card) []Card {
 	return func(cards []Card) []Card {
 		sort.Slice(cards, less(cards))

@@ -37,3 +37,19 @@ func TestJokers(t *testing.T) {
 	}
 
 }
+
+func TestFilter(t *testing.T) {
+	unwantedCards := []Card{Card{Suit: Spades, Value: Ace}, Card{Suit: Diamonds, Value: Three}}
+
+	cards := New(DefaultSort, Filter(unwantedCards))
+
+	for _, card := range cards {
+		if card.Suit == Spades && card.Value == Ace {
+			t.Error("Found Ace of Spades that should be filtered")
+		}
+
+		if card.Suit == Diamonds && card.Value == Three {
+			t.Error("Found Three of Diamonds that should be filtered")
+		}
+	}
+}
