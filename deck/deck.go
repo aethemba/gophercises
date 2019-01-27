@@ -127,6 +127,17 @@ func Less(cards []Card) func(i, j int) bool {
 	}
 }
 
+func Deck(d int) func([]Card) []Card {
+	return func(cards []Card) []Card {
+		var ret []Card
+
+		for i := 0; i < d; i++ {
+			ret = append(ret, cards...)
+		}
+		return ret
+	}
+}
+
 func ShuffleInPlace(d []Card) {
 
 	//For every card in the deck, swap with a random other card

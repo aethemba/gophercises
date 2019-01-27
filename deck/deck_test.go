@@ -53,3 +53,13 @@ func TestFilter(t *testing.T) {
 		}
 	}
 }
+
+func TestDeck(t *testing.T) {
+	cards := New(Deck(3))
+
+	// 13 cards of each suite, times three decks
+	if len(cards) != 13*4*3 {
+		t.Errorf("Incorrect number of cards. Expected %d, received %d", 13*4*3, len(cards))
+	}
+
+}
