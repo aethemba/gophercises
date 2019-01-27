@@ -9,8 +9,8 @@ type Value int
 type Suit int
 
 const (
-	Ace Value = iota
-	One
+	_ Value = iota
+	Ace
 	Two
 	Three
 	Four
@@ -26,7 +26,7 @@ const (
 )
 
 var Suits = []Suit{Diamonds, Hearts, Clubs, Spades}
-var Values = []Value{Ace, One, Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack, Queen, King}
+var Values = []Value{Ace, Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack, Queen, King}
 
 func Shuffle(d []Card) []Card {
 
@@ -98,10 +98,8 @@ type Card struct {
 func (c Card) String() string {
 	var val, suit string
 	switch c.Value {
-	case 0:
-		val = "Ace"
 	case 1:
-		val = "One"
+		val = "Ace"
 	case 2:
 		val = "Two"
 	case 3:
@@ -133,13 +131,13 @@ func (c Card) String() string {
 
 	switch c.Suit {
 	case 0:
-		suit = "Diamonds"
-	case 1:
-		suit = "Hearts"
-	case 2:
-		suit = "Clubs"
-	case 3:
 		suit = "Spades"
+	case 1:
+		suit = "Clubs"
+	case 2:
+		suit = "Hearts"
+	case 3:
+		suit = "Diamonds"
 	default:
 		suit = "Unknown Suit"
 	}
