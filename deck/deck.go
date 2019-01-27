@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"sort"
+	"time"
 )
 
 type Value int
@@ -39,7 +40,9 @@ func Shuffle(d []Card) []Card {
 
 	shuffled := make([]Card, len(d))
 
-	for i, value := range rand.Perm(len(d)) {
+	r := rand.New(rand.NewSource(time.Now().Unix()))
+
+	for i, value := range r.Perm(len(d)) {
 		shuffled[value] = d[i]
 	}
 
