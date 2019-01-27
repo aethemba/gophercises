@@ -3,6 +3,7 @@ package deck
 import (
 	"fmt"
 	"math/rand"
+	"sort"
 )
 
 type Value int
@@ -68,6 +69,25 @@ func (n ByNew) Less(i, j int) bool {
 	return n[i].Value < n[j].Value
 }
 
+func DefaultSort(cards []Card) []Card {
+	sort.Slice(cards, Less(cards))
+	return cards
+}
+
+func CustomSort(less func(cards []Card) func(i, j int) bool) func([]Card) []Card {
+	return func(cards []Card) []Card {
+		sort.Slice(cards, less(cards))
+		return cards
+	}
+}
+
+func Less(cards []Card) func(i, j int) bool {
+	return func(i, j int) bool {
+		var bn ByNew = cards
+		return bn.Less(i, j)
+	}
+}
+
 func ShuffleInPlace(d []Card) {
 
 	//For every card in the deck, swap with a random other card
@@ -77,13 +97,17 @@ func ShuffleInPlace(d []Card) {
 	}
 }
 
-func New(options ...func(*[]Card)) []Card {
+func New(options ...func([]Card) []Card) []Card {
 	cards := make([]Card, 0)
 
 	for _, suit := range Suits {
 		for val := MinValue; val <= MaxValue; val++ {
 			cards = append(cards, Card{Suit: suit, Value: val})
 		}
+	}
+
+	for _, opt := range options {
+		cards = opt(cards)
 	}
 
 	return cards
