@@ -8,6 +8,46 @@ import (
 
 type Hand []deck.Card
 
+type State int
+
+const (
+	StatePlayerTurn State = iota
+	StateDealerTurn
+	StateHandOver
+)
+
+type GameState struct {
+	Deck   []deck.Card
+	State  State
+	Player Hand
+	Dealer Hand
+	Turn   int
+}
+
+func (gs *GameState) CurrentPlayer() *Hand {
+	switch gs.State {
+	case StatePlayerTurn:
+		return &gs.Player
+	case StateDealerTurn:
+		return &gs.Dealer
+	default:
+		panic("Illegal state")
+	}
+}
+
+func clone(gs GameState) GameState {
+	ret := GameState{
+		Deck:   make([]deck.Card, len(gs.Deck)),
+		Player: make(Hand, len(gs.Player)),
+		Dealer: make(Hand, len(gs.Dealer)),
+		Turn:   gs.Turn,
+	}
+	copy(ret.Deck, gs.Deck)
+	copy(ret.Player, gs.Player)
+	copy(ret.Dealer, gs.Dealer)
+	return ret
+}
+
 func (h Hand) MinScore() int {
 	score := 0
 	for _, c := range h {
@@ -55,49 +95,56 @@ func draw(cards []deck.Card) (deck.Card, []deck.Card) {
 }
 
 func main() {
-	fmt.Println("Playing blackjack")
-	cards := deck.New(deck.Deck(3))
-	cards = deck.Shuffle(cards)
-	var card deck.Card
+	var gs GameState
+	gs.Deck = deck.New(deck.Deck(3))
+	// fmt.Println("Playing blackjack")
+	// cards := deck.New(deck.Deck(3))
+	// cards = deck.Shuffle(cards)
+	// var card deck.Card
 
-	var player, dealer Hand
-	for i := 0; i < 2; i++ {
-		for _, h := range []*Hand{&player, &dealer} {
-			card, cards = draw(cards)
-			*h = append(*h, card)
-		}
-	}
+	// var player, dealer Hand
+	// for i := 0; i < 2; i++ {
+	// 	for _, h := range []*Hand{&player, &dealer} {
+	// 		card, cards = draw(cards)
+	// 		*h = append(*h, card)
+	// 	}
+	// }
 
-	var input string
-	for input != "s" {
-		fmt.Println("Hand player: ", player)
-		fmt.Println("Hand dealer: ", dealer.DealerString())
-		fmt.Println("Action? (H)it or (S)tand?")
-		fmt.Scanf("%s\n", &input)
+	// var input string
+	// for input != "s" {
+	// 	fmt.Println("Hand player: ", player)
+	// 	fmt.Println("Hand dealer: ", dealer.DealerString())
+	// 	fmt.Println("Action? (H)it or (S)tand?")
+	// 	fmt.Scanf("%s\n", &input)
 
-		switch input {
-		case "h":
-			card, cards = draw(cards)
-			player = append(player, card)
-		}
-	}
+	// 	switch input {
+	// 	case "h":
+	// 		card, cards = draw(cards)
+	// 		player = append(player, card)
+	// 	}
+	// }
 
-	pScore, dScore := player.Score(), dealer.Score()
+	// if dealer.Score() <= 16 || (dealer.Score() == 17 && dealer.MinScore() < 17) {
+	// 	card, cards = draw(cards)
+	// 	dealer = append(dealer, card)
+	// }
 
-	fmt.Println("**Final hands**")
-	fmt.Println("Player: ", player, "\nScore: ", pScore)
-	fmt.Println("Dealer: ", dealer, "\nScore: ", dScore)
+	// pScore, dScore := player.Score(), dealer.Score()
 
-	switch {
-	case pScore > 21:
-		fmt.Println("You busted")
-	case dScore > 21:
-		fmt.Println("Dealer busted")
-	case pScore > dScore:
-		fmt.Println("You win!")
-	case dScore > pScore:
-		fmt.Println("You lose...")
-	case dScore == pScore:
-		fmt.Println("Draw!")
-	}
+	// fmt.Println("**Final hands**")
+	// fmt.Println("Player: ", player, "\nScore: ", pScore)
+	// fmt.Println("Dealer: ", dealer, "\nScore: ", dScore)
+
+	// switch {
+	// case pScore > 21:
+	// 	fmt.Println("You busted")
+	// case dScore > 21:
+	// 	fmt.Println("Dealer busted")
+	// case pScore > dScore:
+	// 	fmt.Println("You win!")
+	// case dScore > pScore:
+	// 	fmt.Println("You lose...")
+	// case dScore == pScore:
+	// 	fmt.Println("Draw!")
+	// }
 }
