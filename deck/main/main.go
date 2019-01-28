@@ -26,3 +26,14 @@ func main() {
 		fmt.Println(k, v)
 	}
 }
+
+type Player struct {
+	Hand []deck.Card
+}
+
+func DealCards(amount int) {
+
+}
+
+// BLACKJACK
+// Each player gets two cards (players both visible, house 1 visible)
