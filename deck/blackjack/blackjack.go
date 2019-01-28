@@ -42,8 +42,6 @@ func Play(p int) {
 
 	gs := GameState{Players: players, Deck: shuffledCards}
 
-	_ = gs
-
 	for i := 0; i < 2; i++ {
 		for _, player := range gs.Players {
 			gs = DealCard(player, gs)
@@ -56,8 +54,17 @@ func Play(p int) {
 		} else {
 			gs = HouseTurn(gs)
 		}
-
 	}
+
+	winner := DetermineWinner(gs)
+	fmt.Printf("Winner is %#v\n", winner)
+}
+
+func DetermineWinner(gs GameState) Player {
+	for _, player := range gs.Players {
+		_ = player
+	}
+	return gs.Players[0]
 }
 
 func PlayerTurn(gs GameState) GameState {
