@@ -7,8 +7,15 @@ import (
 
 func main() {
 	fmt.Println("Playing blackjack")
-	cards := deck.New()
-	_ = cards
+	cards := deck.New(deck.Deck(3))
+	cards = deck.Shuffle(cards)
+
+	for i := 0; i < 10; i++ {
+		var card deck.Card
+		card, cards = cards[0], cards[1:]
+		fmt.Println(card)
+	}
+
 }
 
 type Player struct {
@@ -19,12 +26,6 @@ type Player struct {
 
 func (p Player) Total() int {
 	return 0
-}
-
-type GameState struct {
-	Players []Player
-	Turn    int
-	Deck    []deck.Card
 }
 
 func Play(p int) {
@@ -50,9 +51,9 @@ func Play(p int) {
 
 	for _, p := range gs.Players {
 		if !p.isHouse {
-			gs = PlayerTurn(gs)
+			gs = PlayerTurn(p, gs)
 		} else {
-			gs = HouseTurn(gs)
+			gs = HouseTurn(p, gs)
 		}
 	}
 
@@ -67,18 +68,19 @@ func DetermineWinner(gs GameState) Player {
 	return gs.Players[0]
 }
 
-func PlayerTurn(gs GameState) GameState {
+func PlayerTurn(p Player, gs GameState) GameState {
+	fmt.Println("You have the following cards")
 	return gs
 }
 
-func HouseTurn(gs GameState) GameState {
+func HouseTurn(p Player, gs GameState) GameState {
 	return gs
 }
 
-func DealCard(p Player, gs GameState) GameState {
+func Draw(p Player, gs GameState) GameState {
 	// Take top card from deck
-	card, newDeck := gs.Deck[len(gs.Deck)-1], gs.Deck[:len(gs.Deck)-1]
-	gs.Deck = newDeck
+	var card deck.Card
+	card, gs.Deck = gs.Deck[0], gs.Deck[1:]
 
 	// Assign it to player cards
 	for _, player := range gs.Players {
