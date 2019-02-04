@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"runtime/debug"
 )
@@ -56,6 +58,25 @@ func (rw *responseWriter) WriteHeader(s int) {
 
 	}
 	rw.status = s
+}
+
+func (rw *responseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	hijacker, ok := rw.ResponseWriter.(http.Hijacker)
+
+	if !ok {
+		return nil, nil, fmt.Errorf("the ResponseWriter does not support the Hijacker interface")
+	}
+
+	return hijacker.Hijack()
+}
+
+func (rw *responseWriter) Flusher() {
+	flusher, ok := rw.ResponseWriter.(http.Flusher)
+
+	if !ok {
+		return
+	}
+	flusher.Flush()
 }
 
 func (rw *responseWriter) flush() error {
