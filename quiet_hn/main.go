@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gophercises/quiet_hn/hn"
@@ -31,10 +32,30 @@ func main() {
 }
 
 func handler(numStories int, tpl *template.Template) http.HandlerFunc {
+
+	sc := StoryCache{numStories: numStories, duration: time.Duration(6 * time.Second)}
+
+	go func() {
+		ticker := time.NewTicker(3 * time.Second)
+		for {
+			temp := StoryCache{
+				numStories: numStories,
+				duration:   6 * time.Second,
+			}
+			temp.Stories()
+			sc.mutex.Lock()
+			sc.cache = temp.cache
+			sc.expiration = temp.expiration
+			sc.mutex.Unlock()
+			<-ticker.C
+
+		}
+	}()
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
-		stories, err := getTopStories(numStories)
+		stories, err := sc.Stories()
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -53,6 +74,43 @@ func handler(numStories int, tpl *template.Template) http.HandlerFunc {
 	})
 }
 
+type StoryCache struct {
+	cache      []item
+	expiration time.Time
+	duration   time.Duration
+	mutex      sync.Mutex
+	numStories int
+}
+
+func (sc *StoryCache) Stories() ([]item, error) {
+
+	sc.mutex.Lock()
+	defer sc.mutex.Unlock() // Very easy to forget, so defer the unlock
+
+	// now < x
+	// now.sub(x) < 0
+	if time.Now().Sub(sc.expiration) < 0 {
+		fmt.Println("Returning cache")
+		return sc.cache, nil
+	}
+
+	stories, err := getTopStories(sc.numStories)
+
+	if err != nil {
+		return nil, err
+	}
+
+	sc.expiration = time.Now().Add(sc.duration)
+	sc.cache = stories
+	return sc.cache, nil
+}
+
+var (
+	cache           []item
+	cacheExpiration time.Time
+	cacheMutex      sync.Mutex
+)
+
 func getTopStories(numStories int) ([]item, error) {
 
 	var client hn.Client
@@ -62,6 +120,21 @@ func getTopStories(numStories int) ([]item, error) {
 		return nil, errors.New("Failed to load top stories")
 	}
 
+	var stories []item
+
+	at := 0
+	for len(stories) < numStories {
+		need := (numStories - len(stories)) * 5 / 4
+		stories = append(stories, GetStories(ids[at:at+need])...)
+		at += need
+
+	}
+
+	return stories[:numStories], nil
+}
+
+func GetStories(ids []int) []item {
+
 	type result struct {
 		idx  int
 		item item
@@ -69,7 +142,8 @@ func getTopStories(numStories int) ([]item, error) {
 	}
 	resultCh := make(chan result)
 
-	for i := 0; i < numStories; i++ {
+	for i := 0; i < len(ids); i++ {
+		var client hn.Client
 		go func(i, id int) {
 			hnItem, err := client.GetItem(id)
 			if err != nil {
@@ -80,7 +154,7 @@ func getTopStories(numStories int) ([]item, error) {
 	}
 
 	var results []result
-	for i := 0; i < numStories; i++ {
+	for i := 0; i < len(ids); i++ {
 		// Whenever a goroutine is done, it will be ready to be received. Its unordered
 		results = append(results, <-resultCh)
 	}
@@ -97,8 +171,7 @@ func getTopStories(numStories int) ([]item, error) {
 			stories = append(stories, res.item)
 		}
 	}
-
-	return stories, nil
+	return stories
 }
 
 func isStoryLink(item item) bool {

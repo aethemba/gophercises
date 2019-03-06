@@ -7,15 +7,8 @@ import (
 
 func main() {
 	fmt.Println("Playing blackjack")
-	cards := deck.New(deck.Deck(3))
-	cards = deck.Shuffle(cards)
-
-	for i := 0; i < 10; i++ {
-		var card deck.Card
-		card, cards = cards[0], cards[1:]
-		fmt.Println(card)
-	}
-
+	cards := deck.New()
+	_ = cards
 }
 
 type Player struct {
@@ -26,6 +19,12 @@ type Player struct {
 
 func (p Player) Total() int {
 	return 0
+}
+
+type GameState struct {
+	Players []Player
+	Turn    int
+	Deck    []deck.Card
 }
 
 func Play(p int) {
